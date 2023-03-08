@@ -9,11 +9,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const whitelist = [
-  "https://bucodel-lms.onrender.com",
   "http://localhost:3000",
-  "https://bucodel.vercel.app",
-  "https://bucodel-alabiemmanuel177.vercel.app",
-  "https://bucodel.vercel.app/",
 ];
 const corsOptions = {
   origin: function (origin, callback) {
