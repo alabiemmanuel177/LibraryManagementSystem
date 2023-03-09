@@ -40,7 +40,7 @@ router.post("/register", async (req, res) => {
 });
 
 // non-student login route
-router.post("/login", async (req, res) => {
+router.post("/non-student/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -75,7 +75,7 @@ router.post("/login", async (req, res) => {
 });
 
 // student login route
-router.post("/login", async (req, res) => {
+router.post("/student/login", async (req, res) => {
   try {
     const { matricNo, password } = req.body;
 
