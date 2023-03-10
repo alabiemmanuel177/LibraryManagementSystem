@@ -111,10 +111,10 @@ router.post("/student/login", async (req, res) => {
 // Admin login route
 router.post("/admin/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // Check if admin exists
-    const admin = await User.findOne({ username });
+    const admin = await User.findOne({ email });
     if (!admin) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -133,7 +133,7 @@ router.post("/admin/login", async (req, res) => {
     );
 
     // Return token and admin information
-    res.status(200).json({ token, admin: { username: admin.username } });
+    res.status(200).json({ token, admin: { email: admin.email } });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
