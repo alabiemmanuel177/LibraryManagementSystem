@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
   },
+  phoneNo: {
+    type: String,
+    required: true,
+  },
 });
 
 const User = mongoose.model("User", userSchema);
