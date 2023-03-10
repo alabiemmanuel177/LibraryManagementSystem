@@ -67,7 +67,7 @@ router.post("/non-student/login", async (req, res) => {
     // Return token and user information
     res.status(200).json({
       token,
-      user: { username: user.username, userType: user.userType },
+      user: user,
     });
   } catch (error) {
     console.log(error);
@@ -102,7 +102,7 @@ router.post("/student/login", async (req, res) => {
     // Return token and user information
     res.status(200).json({
       token,
-      user: { username: user.username, userType: user.userType },
+      user: user,
     });
   } catch (error) {
     res.status(500).json({ message: error });
@@ -133,7 +133,7 @@ router.post("/admin/login", async (req, res) => {
     );
 
     // Return token and admin information
-    res.status(200).json({ token, admin: { email: admin.email } });
+    res.status(200).json({ token, admin: admin });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
