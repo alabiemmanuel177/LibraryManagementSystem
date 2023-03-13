@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const User = require("../models/User");
+const bcrypt = require("bcryptjs");
 
 //UPDATE USER
 router.put("/:id", async (req, res) => {
@@ -78,7 +79,7 @@ router.post("/change-password", async (req, res) => {
     await user.save();
     res.json({ msg: "Password changed successfully" });
   } catch (err) {
-    console.error(err.message);
+    console.log(err);
     res.status(500).send("Server error");
   }
 });

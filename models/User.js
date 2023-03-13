@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     },
     phoneNo: {
       type: String,
-      required: true,
+      // required: true,
     },
   },
   { timestamps: true }
