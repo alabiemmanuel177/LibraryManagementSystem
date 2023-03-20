@@ -21,14 +21,16 @@ const BookSchema = new mongoose.Schema(
     },
     publisher: {
       type: String,
+      required: true,
     },
     description: {
       type: String,
       required: true,
     },
     image: {
-      type: String,
-      unique: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BookPic",
+      required: true,
     },
     status: {
       type: String,
