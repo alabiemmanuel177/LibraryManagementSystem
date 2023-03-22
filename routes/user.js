@@ -36,7 +36,7 @@ router.delete("/:id", async (req, res) => {
 //GET USER
 router.get("/:id", async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).populate("profilePic");
     return res.status(200).json(user);
   } catch (err) {
     return res.status(500).json(err);
