@@ -33,6 +33,7 @@ router.post("/", upload.single("bookPic"), async (req, res) => {
 
     // Save book to database
     await newBook.save();
+    fs.unlinkSync(path);
 
     res.status(201).json(newBook);
   } catch (err) {
@@ -81,7 +82,7 @@ router.get("/:id", async (req, res) => {
 //GET ALL BOOK
 router.get("/", async (req, res) => {
   try {
-    const books = await Book.find().populate("bookPic");
+    const books = await Book.find().populate("category").populate("bookPic");
     return res.status(200).json(books);
   } catch (err) {
     return res.status(500).json({ message: "Internal server error" });
