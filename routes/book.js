@@ -83,7 +83,7 @@ router.get("/", async (req, res) => {
   try {
     let books;
     books = await Book.find();
-    return res.status(200).json(books);
+    return res.status(200).json(books).populate("bookPic");
   } catch (err) {
     return res.status(500).json(err);
   }
