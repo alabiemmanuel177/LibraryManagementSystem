@@ -27,7 +27,7 @@ const BookSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    image: {
+    bookPic: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "BookPic",
       required: true,
