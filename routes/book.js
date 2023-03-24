@@ -81,11 +81,10 @@ router.get("/:id", async (req, res) => {
 //GET ALL BOOK
 router.get("/", async (req, res) => {
   try {
-    let books;
-    books = await Book.find();
-    return res.status(200).json(books).populate("bookPic");
+    const books = await Book.find().populate("bookPic");
+    return res.status(200).json(books);
   } catch (err) {
-    return res.status(500).json(err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
