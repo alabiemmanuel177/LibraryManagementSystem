@@ -7,7 +7,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploads = (file, folder) => {
+const uploads = (req, folder) => {
+  const file = req.file.path;
   return new Promise((resolve, reject) => {
     cloudinary.uploader.unsigned_upload(
       file,
@@ -30,6 +31,7 @@ const uploads = (file, folder) => {
     );
   });
 };
+
 
 const uploader = async (path, folderName) => await uploads(path, folderName);
 
