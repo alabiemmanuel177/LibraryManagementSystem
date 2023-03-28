@@ -5,11 +5,10 @@ const Request = require("../models/request");
 // Route to create a new request
 router.post("/", async (req, res, next) => {
   try {
-    const user = req.user;
-    const { books, loanDate, returnDate } = req.body;
+    const { books, loanDate, returnDate, user } = req.body;
 
     const request = new Request({
-      user: user._id,
+      user,
       books,
       loanDate,
       returnDate,
