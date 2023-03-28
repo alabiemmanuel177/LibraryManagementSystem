@@ -8,9 +8,20 @@ const io = require("socket.io")(server, { cors: { origin: "*" } });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const whitelist = [
-  "http://localhost:3000",
-];
+const fs = require("fs");
+
+const UPLOADS_DIR = "./uploads";
+
+// Check if the uploads directory exists
+if (!fs.existsSync(UPLOADS_DIR)) {
+  // If it doesn't exist, create the directory
+  fs.mkdirSync(UPLOADS_DIR);
+  console.log("Folder Created");
+} else {
+  console.log("Folder Exist");
+}
+
+const whitelist = ["http://localhost:3000"];
 const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {
