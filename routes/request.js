@@ -147,4 +147,36 @@ router.put("/:id/return", async (req, res, next) => {
   }
 });
 
+//DELETE REQUEST
+router.delete("/:id", async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.id);
+    await request.delete();
+    return res.status(200).json("Request has been deleted...");
+  } catch (err) {
+    return res.status(500).json(err);
+  }
+});
+
+//GET REQUEST
+router.get("/:id", async (req, res) => {
+  try {
+    const request = await Request.findById(req.params.id);
+    return res.status(200).json(request);
+  } catch (err) {
+    return res.status(500).json(err);
+  }
+});
+
+//GET ALL REQUEST
+router.get("/", async (req, res) => {
+  try {
+    let requests;
+    requests = await Request.find();
+    return res.status(200).json(requests);
+  } catch (err) {
+    return res.status(500).json(err);
+  }
+});
+
 module.exports = router;
