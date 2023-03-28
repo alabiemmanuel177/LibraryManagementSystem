@@ -3,7 +3,7 @@ const router = express.Router();
 const Request = require("../models/request");
 
 // Route to create a new request
-router.post("/requests", async (req, res, next) => {
+router.post("/", async (req, res, next) => {
   try {
     const user = req.user;
     const { books, loanDate, returnDate } = req.body;
@@ -26,7 +26,7 @@ router.post("/requests", async (req, res, next) => {
   }
 });
 
-router.put("/requests/:id/approve", async (req, res, next) => {
+router.put("/:id/approve", async (req, res, next) => {
   try {
     const requestId = req.params.id;
     const request = await Request.findById(requestId).populate("books");
@@ -69,7 +69,7 @@ router.put("/requests/:id/approve", async (req, res, next) => {
   }
 });
 
-router.put("/requests/:id/decline", async (req, res, next) => {
+router.put("/:id/decline", async (req, res, next) => {
   try {
     const requestId = req.params.id;
     const request = await Request.findById(requestId);
@@ -98,7 +98,7 @@ router.put("/requests/:id/decline", async (req, res, next) => {
   }
 });
 
-router.put("/requests/:id/return", async (req, res, next) => {
+router.put("/:id/return", async (req, res, next) => {
   try {
     const requestId = req.params.id;
     const request = await Request.findById(requestId).populate("books");
