@@ -1,76 +1,150 @@
-const router = require("express").Router();
-const Admin = require("../models/Admin");
-const Notice = require("../models/Notice");
+const express = require("express");
+const router = express.Router();
+const Request = require("../models/request");
 
-//CREATE NOTICE
-router.post("/", async (req, res) => {
-  const newNotice = new Notice(req.body);
+// Route to create a new request
+router.post("/requests", async (req, res, next) => {
   try {
-    const savedNotice = await newNotice.save();
-    return res.status(200).json(savedNotice);
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json(err);
-  }
-});
+    const user = req.user;
+    const { books, loanDate, returnDate } = req.body;
 
-//UPDATE NOTICE
-router.put("/:id", async (req, res) => {
-  try {
-    const updatedNotice = await Notice.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: req.body,
-      },
-      { new: true }
-    );
-    return res.status(200).json(updatedNotice);
-  } catch (err) {
-    return res.status(500).json(err);
-  }
-});
-
-//DELETE NOTICE
-router.delete("/:id", async (req, res) => {
-  try {
-    const notice = await Notice.findById(req.params.id);
-    await notice.delete();
-    return res.status(200).json("Notice has been deleted...");
-  } catch (err) {
-    return res.status(500).json(err);
-  }
-});
-
-//GET NOTICE
-router.get("/:id", async (req, res) => {
-  try {
-    const notice = await Notice.findById(req.params.id);
-    return res.status(200).json(notice);
-  } catch (err) {
-    return res.status(500).json(err);
-  }
-});
-
-//GET ALL NOTICE
-router.get("/", async (req, res) => {
-  try {
-    let notices;
-    notices = await Notice.find().populate("author");
-    return res.status(200).json(notices);
-  } catch (err) {
-    return res.status(500).json(err);
-  }
-});
-
-//PATCH NOTICE
-router.patch("/:id", async (req, res) => {
-  try {
-    const updatedNotice = await Notice.findByIdAndUpdate(req.params.id, {
-      $push: req.body,
+    const request = new Request({
+      user: user._id,
+      books,
+      loanDate,
+      returnDate,
     });
-    return res.status(200).json(updatedNotice);
+
+    await request.save();
+
+    res.status(201).json({
+      message: "Request created successfully",
+      request,
+    });
   } catch (err) {
-    return res.status(500).json(err);
+    next(err);
+  }
+});
+
+router.put("/requests/:id/approve", async (req, res, next) => {
+  try {
+    const requestId = req.params.id;
+    const request = await Request.findById(requestId).populate("books");
+
+    if (!request) {
+      const error = new Error("Request not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (request.status !== "pending") {
+      const error = new Error("Request has already been processed");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const bookIds = request.books.map((book) => book._id);
+    const books = await Book.find({ _id: { $in: bookIds } });
+
+    books.forEach(async (book) => {
+      if (book.copies <= 0) {
+        const error = new Error("Not enough copies available");
+        error.statusCode = 400;
+        throw error;
+      }
+
+      book.copies -= 1;
+      await book.save();
+    });
+
+    request.status = "approved";
+    await request.save();
+
+    res.status(200).json({
+      message: "Request approved successfully",
+      request,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/requests/:id/decline", async (req, res, next) => {
+  try {
+    const requestId = req.params.id;
+    const request = await Request.findById(requestId);
+
+    if (!request) {
+      const error = new Error("Request not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (request.status !== "pending") {
+      const error = new Error("Request has already been processed");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    request.status = "declined";
+    await request.save();
+
+    res.status(200).json({
+      message: "Request declined successfully",
+      request,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/requests/:id/return", async (req, res, next) => {
+  try {
+    const requestId = req.params.id;
+    const request = await Request.findById(requestId).populate("books");
+
+    if (!request) {
+      const error = new Error("Request not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (request.status !== "approved") {
+      const error = new Error("Request has not been approved yet");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const returnedBooks = req.body.books;
+
+    if (returnedBooks.length !== request.books.length) {
+      const error = new Error(
+        "Number of books returned does not match the number of books borrowed"
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
+    for (let i = 0; i < request.books.length; i++) {
+      const book = request.books[i];
+      if (!returnedBooks.includes(book._id.toString())) {
+        const error = new Error("All borrowed books must be returned");
+        error.statusCode = 400;
+        throw error;
+      }
+      book.copies += 1;
+      await book.save();
+    }
+
+    request.status = "returned";
+    await request.save();
+
+    res.status(200).json({
+      message: "Books returned successfully",
+      request,
+    });
+  } catch (err) {
+    next(err);
   }
 });
 

@@ -1,9 +1,10 @@
 const router = require("express").Router();
 const Book = require("../models/Book");
 const multer = require("multer");
-const { uploader, destroy } = require("../util/cloudinary");
+const { uploader, deleteFile } = require("../util/cloudinary");
 const BookPic = require("../models/BookPic");
 const upload = require("../middlewares/upload");
+const fs = require("fs");
 
 //CREATE BOOK
 router.post("/", upload.single("bookPic"), async (req, res) => {
@@ -29,18 +30,30 @@ router.post("/", upload.single("bookPic"), async (req, res) => {
       publisher: req.body.publisher,
       description: req.body.description,
       bookPic: newBookPic._id,
+      inventoryCopies: req.body.inventoryCopies,
+      copies: req.body.copies,
     });
 
     // Save book to database
     await newBook.save();
-    fs.unlinkSync(path);
+
+    // Delete uploaded image from server
+    fs.unlinkSync(req.file.path);
+
+    // If book creation failed, delete uploaded image from cloudinary
+    if (!newBook) {
+      await deleteFile(newBookPic.public_id);
+    }
 
     res.status(201).json(newBook);
   } catch (err) {
+    // Delete uploaded image from server if an error occurred
+    fs.unlinkSync(req.file.path);
     console.log(err);
     res.status(500).json({ message: "Server error" });
   }
 });
+
 
 //UPDATE BOOK
 router.put("/:id", async (req, res) => {

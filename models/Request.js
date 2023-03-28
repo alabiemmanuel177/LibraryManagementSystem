@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const RequestSchema = new mongoose.Schema(
   {
     user: {
@@ -7,42 +5,67 @@ const RequestSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    author: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    year: {
-      type: Number,
-      required: true,
-    },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
+    books: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Book",
+        required: true,
+      },
+    ],
+    loanDate: {
+      type: Date,
       required: true,
     },
-    publisher: {
-      type: String,
-      unique: true,
-    },
-    description: {
-      type: String,
+    returnDate: {
+      type: Date,
       required: true,
-    },
-    image: {
-      type: String,
-      unique: true,
     },
     status: {
       type: String,
       required: true,
-      enum: ["on-shelf", "off-shelf"],
-      default: "on-shelf",
+      enum: ["pending", "approved", "declined", "returned"],
+      default: "pending",
     },
   },
   { timestamps: true }
 );
 
-const Book = mongoose.model("Book", RequestSchema);
+RequestSchema.path("books").validate(function (value) {
+  return value.length <= 5;
+}, "A maximum of 5 books can be requested at once.");
 
-module.exports = Book;
+RequestSchema.pre("validate", async function (next) {
+  const user = await mongoose.model("User").findById(this.user);
+  const existingRequests = await mongoose
+    .model("Request")
+    .find({ user: this.user, status: "approved" });
+  const bookIds = this.books.map((book) => book.toString());
+  const requestedBooks = await mongoose
+    .model("Book")
+    .find({ _id: { $in: bookIds } });
+  let invalid = false;
+
+  requestedBooks.forEach((book) => {
+    if (book.copies <= 0) {
+      invalid = true;
+    }
+  });
+
+  if (existingRequests.length > 0) {
+    invalid = true;
+  }
+
+  if (invalid) {
+    const error = new Error(
+      "Please Return Borrowed Books before requesting to loan some more"
+    );
+    error.statusCode = 400;
+    return next(error);
+  }
+
+  next();
+});
+
+const Request = mongoose.model("Request", RequestSchema);
+
+module.exports = Request;

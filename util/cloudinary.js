@@ -6,6 +6,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
 const uploads = (file, folder) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.unsigned_upload(
@@ -29,7 +30,22 @@ const uploads = (file, folder) => {
     );
   });
 };
+
 const uploader = async (path, folderName) => await uploads(path, folderName);
+
+// add a new function to delete a file
+const deleteFile = (public_id) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(public_id, (error, result) => {
+      if (error) {
+        reject(error);
+      }
+      resolve(result);
+    });
+  });
+};
+
 module.exports = {
   uploader,
+  deleteFile, // export the new function
 };

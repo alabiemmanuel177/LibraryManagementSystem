@@ -38,6 +38,16 @@ const BookSchema = new mongoose.Schema(
       enum: ["on-shelf", "off-shelf"],
       default: "on-shelf",
     },
+    inventoryCopies: {
+      type: Number,
+      required: true,
+      default: 1,
+    },
+    copies: {
+      type: Number,
+      required: true,
+      default: 1,
+    },
   },
   { timestamps: true }
 );
