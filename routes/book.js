@@ -37,13 +37,13 @@ router.post("/", upload.single("bookPic"), async (req, res) => {
     // Save book to database
     await newBook.save();
 
-    // Delete uploaded image from server
-    fs.unlinkSync(req.file.path);
-
     // If book creation failed, delete uploaded image from cloudinary
     if (!newBook) {
       await deleteFile(newBookPic.public_id);
     }
+
+    // Delete uploaded image from server
+    fs.unlinkSync(req.file.path);
 
     res.status(201).json(newBook);
   } catch (err) {
@@ -53,7 +53,6 @@ router.post("/", upload.single("bookPic"), async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-
 
 //UPDATE BOOK
 router.put("/:id", async (req, res) => {
