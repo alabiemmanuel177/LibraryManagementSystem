@@ -161,8 +161,8 @@ router.delete("/:id", async (req, res) => {
 //GET REQUEST
 router.get("/:id", async (req, res) => {
   try {
-    const request = await Request.findById(req.params.id);
-    return res.status(200).json(request).populate("user");
+    const request = await Request.findById(req.params.id).populate("user");
+    return res.status(200).json(request);
   } catch (err) {
     return res.status(500).json(err);
   }
@@ -172,7 +172,7 @@ router.get("/:id", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     let requests;
-    requests = await Request.find();
+    requests = await Request.find().populate("user");
     return res.status(200).json(requests);
   } catch (err) {
     return res.status(500).json(err);
