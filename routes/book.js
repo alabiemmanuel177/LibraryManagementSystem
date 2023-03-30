@@ -11,7 +11,7 @@ router.post("/", upload.single("bookPic"), async (req, res) => {
   try {
     // Upload image to cloudinary
     const result = await uploader(req, "LMS/Book Images");
-    
+
     // Create a new profile picture document in the database
     const newBookPic = new BookPic({
       fileUrl: result.secure_url,

@@ -1,4 +1,6 @@
 const express = require("express");
+const { default: mongoose } = require("mongoose");
+const Book = require("../models/Book");
 const router = express.Router();
 const Request = require("../models/Request");
 
@@ -25,46 +27,29 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:id/approve", async (req, res, next) => {
+router.patch("/:id/approve", async (req, res, next) => {
   try {
     const requestId = req.params.id;
-    const request = await Request.findById(requestId).populate("books");
-
-    if (!request) {
-      const error = new Error("Request not found");
-      error.statusCode = 404;
-      throw error;
-    }
+    const request = await Request.findById(requestId);
 
     if (request.status !== "pending") {
-      const error = new Error("Request has already been processed");
-      error.statusCode = 400;
-      throw error;
+      return res.status(400).json({ message: "Request status is not pending" });
     }
 
-    const bookIds = request.books.map((book) => book._id);
-    const books = await Book.find({ _id: { $in: bookIds } });
-
-    books.forEach(async (book) => {
-      if (book.copies <= 0) {
-        const error = new Error("Not enough copies available");
-        error.statusCode = 400;
-        throw error;
-      }
-
+    // update the copies of each book in the request
+    for (const bookId of request.books) {
+      const book = await Book.findById(bookId);
       book.copies -= 1;
       await book.save();
-    });
+    }
 
     request.status = "approved";
     await request.save();
 
-    res.status(200).json({
-      message: "Request approved successfully",
-      request,
-    });
+    return res.json({ message: "Request approved" });
   } catch (err) {
-    next(err);
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -161,7 +146,13 @@ router.delete("/:id", async (req, res) => {
 //GET REQUEST
 router.get("/:id", async (req, res) => {
   try {
-    const request = await Request.findById(req.params.id).populate("user");
+    const request = await Request.findById(req.params.id)
+      .populate({
+        path: "user",
+        populate: { path: "profilePic", model: "ProfilePic" },
+      })
+      .populate("books")
+      .exec();
     return res.status(200).json(request);
   } catch (err) {
     return res.status(500).json(err);
@@ -172,7 +163,13 @@ router.get("/:id", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     let requests;
-    requests = await Request.find().populate("user");
+    requests = await Request.find()
+      .populate({
+        path: "user",
+        populate: { path: "profilePic", model: "ProfilePic" },
+      })
+      .populate("books")
+      .exec();
     return res.status(200).json(requests);
   } catch (err) {
     return res.status(500).json(err);
