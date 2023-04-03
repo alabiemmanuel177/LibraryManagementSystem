@@ -251,7 +251,7 @@ router.get("/:id", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     let loans;
-    requests = await Loan.find()
+    loans = await Loan.find()
       .populate({
         path: "user",
         populate: { path: "profilePic", model: "ProfilePic" },
