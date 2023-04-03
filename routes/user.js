@@ -132,9 +132,7 @@ router.post(
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Upload the new profile picture to Cloudinary
-      const { path } = req.file;
-      const result = await uploader(path, "LMS/profile_pictures");
+      const result = await uploader(req, "LMS/profile_pictures");
 
       // Create a new profile picture document in the database
       const newProfilePic = new ProfilePic({
