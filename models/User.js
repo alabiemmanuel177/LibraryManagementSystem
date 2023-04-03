@@ -9,11 +9,11 @@ const userSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      // required: true,
+      required: true,
     },
     dob: {
       type: String,
-      // required: true,
+      required: true,
     },
     email: {
       type: String,
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
     sex: {
       type: String,
       enum: ["male", "female"],
-      // required: true,
+      required: true,
     },
     userType: {
       type: String,
@@ -41,8 +41,23 @@ const userSchema = new mongoose.Schema(
     },
     phoneNo: {
       type: String,
-      // required: true,
+      required: true,
     },
+    activeLoan: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Loan",
+        required: true,
+        default: null,
+      },
+    ],
+    borrowedBooks: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Book",
+        required: true,
+      },
+    ],
     profilePic: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProfilePic",

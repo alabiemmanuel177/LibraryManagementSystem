@@ -1,3 +1,4 @@
+// This function is responsible for generating the necessary googletasks to route requests to the appropriate route. The route created here will be the same as the route created in the router
 const router = require("express").Router();
 const Book = require("../models/Book");
 const multer = require("multer");
@@ -30,8 +31,10 @@ router.post("/", upload.single("bookPic"), async (req, res) => {
       publisher: req.body.publisher,
       description: req.body.description,
       bookPic: newBookPic._id,
-      inventoryCopies: req.body.inventoryCopies,
-      copies: req.body.copies,
+      totalCopies: req.body.totalCopies,
+      availableCopies: req.body.availableCopies,
+      borrowedCopies: 0,
+      borrowers: [],
     });
 
     // Save book to database
@@ -84,7 +87,10 @@ router.delete("/:id", async (req, res) => {
 //GET BOOK
 router.get("/:id", async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id).populate("bookPic");
+    const book = await Book.findById(req.params.id)
+      .populate("category")
+      .populate("bookPic")
+      .populate("borrowers");
     return res.status(200).json(book);
   } catch (err) {
     return res.status(500).json(err);
@@ -94,7 +100,10 @@ router.get("/:id", async (req, res) => {
 //GET ALL BOOK
 router.get("/", async (req, res) => {
   try {
-    const books = await Book.find().populate("category").populate("bookPic");
+    const books = await Book.find()
+      .populate("category")
+      .populate("bookPic")
+      .populate("borrowers");
     return res.status(200).json(books);
   } catch (err) {
     return res.status(500).json({ message: "Internal server error" });

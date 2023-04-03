@@ -14,40 +14,46 @@ const BookSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    category: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
+    description: {
+      type: String,
       required: true,
     },
     publisher: {
       type: String,
       required: true,
     },
-    description: {
-      type: String,
+    totalCopies: {
+      type: Number,
       required: true,
+      default: 1,
+    },
+    availableCopies: {
+      type: Number,
+      required: true,
+      default: 1,
+    },
+    borrowedCopies: {
+      type: Number,
+      required: true,
+      default: 1,
     },
     bookPic: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "BookPic",
       required: true,
     },
-    status: {
-      type: String,
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
       required: true,
-      enum: ["on-shelf", "off-shelf"],
-      default: "on-shelf",
     },
-    inventoryCopies: {
-      type: Number,
-      required: true,
-      default: 1,
-    },
-    copies: {
-      type: Number,
-      required: true,
-      default: 1,
-    },
+    borrowers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+    ],
   },
   { timestamps: true }
 );

@@ -40,6 +40,8 @@ router.post("/register", async (req, res) => {
       dob,
       sex,
       address,
+      borrowedBooks: [],
+      activeLoan: null,
     });
 
     // Save user to database
