@@ -18,6 +18,12 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "User already has an active loan" });
     }
 
+    if (!req.body.books || req.body.books.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "Please provide at least one book to borrow" });
+    }
+
     if (user.borrowedBooks.length + req.body.books.length > 5) {
       return res
         .status(400)
@@ -140,83 +146,104 @@ router.patch("/:id/deny", async (req, res) => {
   }
 });
 
-// Route to return books borrowed
-router.patch("/:id/return", async (req, res) => {
+// Route to return books in a loan
+router.patch("/:loanId/return", async (req, res) => {
   try {
-    const loan = await Loan.findById(req.params.id);
+    const loanId = req.params.loanId;
+    const loan = await Loan.findById(loanId).populate("books").populate("user");
 
+    // Check if loan exists
     if (!loan) {
-      return res.status(404).json({ error: "Loan not found" });
+      return res.status(404).json({ message: "Loan not found" });
     }
 
-    if (loan.status !== "approved") {
-      return res.status(400).json({ error: "Loan has not been approved" });
-    }
+    const returnedBooks = req.body.books; // Array of book IDs
 
-    const user = await User.findById(loan.user);
-
-    if (!user) {
-      return res.status(500).json({ error: "Error returning book" });
-    }
-
-    const returnedBooks = req.body.books;
-
-    if (!returnedBooks || returnedBooks.length === 0) {
+    // Check if all returned books exist in the loan
+    const invalidBooks = returnedBooks.filter(
+      (id) => !loan.books.some((book) => book._id.toString() === id)
+    );
+    if (invalidBooks.length > 0) {
       return res
         .status(400)
-        .json({ error: "Please provide at least one book to return" });
+        .json({ message: "Invalid book IDs in returnedBooks" });
     }
 
-    if (returnedBooks.length > loan.books.length) {
-      return res
-        .status(400)
-        .json({ error: "Cannot return more books than borrowed" });
-    }
-
-    const booksToUpdate = await Promise.all(
-      returnedBooks.map(async (bookId) => {
-        const book = await Book.findById(bookId);
-
-        if (!book) {
-          throw new Error("Book not found");
-        }
-
-        if (!loan.books.includes(bookId)) {
-          throw new Error("Book not part of loan");
-        }
-
-        if (book.borrowers.length === 0) {
-          throw new Error("Book not borrowed");
-        }
-
+    // Update returned books array and available/borrowed copies of books
+    const returnedBookIds = loan.returnedBooks.map((book) =>
+      book._id.toString()
+    );
+    returnedBooks.forEach((bookId) => {
+      if (!returnedBookIds.includes(bookId)) {
+        const book = loan.books.find((b) => b._id.toString() === bookId);
         book.availableCopies++;
         book.borrowedCopies--;
-        book.borrowers = book.borrowers.filter(
-          (borrowerId) => borrowerId.toString() !== user._id.toString()
-        );
-        await book.save();
+        loan.returnedBooks.push(book);
+      }
+    });
 
-        return book;
-      })
-    );
-
-    const isLoanFullyReturned = returnedBooks.length === loan.books.length;
-
-    if (isLoanFullyReturned) {
+    // Update loan status
+    if (loan.returnedBooks.length === loan.books.length) {
       loan.status = "returned";
-      user.activeLoan = null;
-      user.borrowedBooks = [];
     } else {
-      loan.status = "partially returned";
+      loan.status = "partially-returned";
     }
 
+    // Save changes
+    await Promise.all([loan.save(), ...loan.books.map((book) => book.save())]);
+
+    return res
+      .status(200)
+      .json({ message: "Books returned successfully", loan });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/:loanId/partially-return", async (req, res) => {
+  const { loanId } = req.params;
+  const bookIds = req.body.books;
+
+  try {
+    const loan = await Loan.findById(loanId).populate("user").populate("books");
+    const books = await Book.find({ _id: { $in: bookIds } });
+
+    // Check if loan status is "partially-returned"
+    if (loan.status !== "partially-returned") {
+      return res
+        .status(400)
+        .json({ message: 'Loan status is not "partially-returned"' });
+    }
+
+    // Update returnedBooks array in loan document
+    loan.returnedBooks.push(...bookIds);
+
+    // Check if all books have been returned
+    if (loan.returnedBooks.length === loan.books.length) {
+      loan.status = "returned";
+    }
+
+    // Update loan document
     await loan.save();
+
+    // Update availableCopies and borrowedCopies fields in Book document for each book that has been returned
+    for (const book of books) {
+      book.availableCopies++;
+      book.borrowedCopies--;
+      await book.save();
+    }
+
+    // Update activeLoan and borrowedBooks arrays in User document
+    const user = loan.user;
+    user.activeLoan.pull(null);
+    user.borrowedBooks.push(...bookIds);
     await user.save();
 
-    res.json({ loan, returnedBooks: booksToUpdate });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error returning book" });
+    res.status(200).json({ message: "Books returned successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

@@ -47,7 +47,7 @@ router.get("/:id", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     let users;
-    users = await User.find();
+    users = await User.find().populate("profilePic");
     return res.status(200).json(users);
   } catch (err) {
     return res.status(500).json(err);

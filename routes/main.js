@@ -3,19 +3,14 @@ const UserRouter = require("./user");
 const CategoryRouter = require("./category");
 const BookRouter = require("./book");
 const LoanRouter = require("./loan");
+const ProfilePicRouter = require("./ProfilePic");
 
-function addSocketConnectionToReq(io) {
-  return async (req, res, next) => {
-    req.IOconn = io;
-    next();
-  };
-}
-
-const routes = ({ app, io }) => {
+const routes = ({ app }) => {
   app.use("/auth", AuthRouter);
   app.use("/user", UserRouter);
   app.use("/book", BookRouter);
   app.use("/loan", LoanRouter);
+  app.use("/profilepic", ProfilePicRouter);
   app.use("/category", CategoryRouter);
 };
 
