@@ -3,7 +3,7 @@ const UserRouter = require("./user");
 const CategoryRouter = require("./category");
 const BookRouter = require("./book");
 const LoanRouter = require("./loan");
-const ProfilePicRouter = require("./ProfilePic");
+const ProfilePicRouter = require("./profilePic");
 
 const routes = ({ app }) => {
   app.use("/auth", AuthRouter);
