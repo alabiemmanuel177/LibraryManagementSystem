@@ -198,6 +198,7 @@ router.patch("/:loanId/return", async (req, res) => {
     // Save changes
     await Promise.all([loan.save(), ...loan.books.map((book) => book.save())]);
     user.activeLoan = null;
+    user.borrowedBooks = [];
     await user.save();
     return res
       .status(200)
@@ -244,7 +245,7 @@ router.put("/:loanId/partially-return", async (req, res) => {
     // Update activeLoan and borrowedBooks arrays in User document
     const user = loan.user;
     user.activeLoan = null;
-    user.borrowedBooks.push(...bookIds);
+    user.borrowedBooks = [];
     await user.save();
 
     res.status(200).json({ message: "Books returned successfully" });
