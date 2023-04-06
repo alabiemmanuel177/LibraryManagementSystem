@@ -21,19 +21,20 @@ if (!fs.existsSync(UPLOADS_DIR)) {
   console.log("Folder Exist");
 }
 
-const whitelist = ["http://localhost:3000"];
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
+const allowedOrigins = ["http://localhost:3000", "http://example.com"];
 
-app.use(cors(corsOptions));
-app.use(cors());
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Check if the request origin is in the allowed origins array
+      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+  })
+);
 
 const { routes } = require("./routes/main");
 
