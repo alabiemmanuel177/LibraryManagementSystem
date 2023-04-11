@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
-const { uploader, destroy } = require("../util/cloudinary");
+const { uploader, deleteFile } = require("../util/cloudinary");
 const multer = require("multer");
 const fs = require("fs");
 const ProfilePic = require("../models/ProfilePic");
@@ -150,13 +150,52 @@ router.post(
       res
         .status(200)
         .json({ message: "Profile picture uploaded successfully" });
-      fs.unlinkSync(req.file.path);
+      fs.unlinkSync(req);
     } catch (err) {
-      fs.unlinkSync(req.file.path);
+      fs.unlinkSync(req);
       console.log(err);
       res.status(500).json({ message: "Server error" });
     }
   }
 );
+
+// Delete the profile picture for a user
+router.delete("/:userId/profilepic", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if the user has a profile picture
+    if (!user.profilePic) {
+      return res
+        .status(400)
+        .json({ message: "User does not have a profile picture" });
+    }
+
+    const profilePic = await ProfilePic.findById(user.profilePic);
+
+    if (!profilePic) {
+      return res.status(404).json({ message: "Profile picture not found" });
+    }
+
+    // Delete the profile picture from Cloudinary
+    await deleteFile(profilePic.public_id);
+
+    // Delete the profile picture document from the database
+    await ProfilePic.findByIdAndDelete(profilePic._id);
+
+    // Remove the reference to the profile picture from the user's document
+    user.profilePic = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Profile picture deleted successfully" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 module.exports = router;

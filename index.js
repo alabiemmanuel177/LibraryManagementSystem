@@ -3,11 +3,44 @@ const app = express();
 const connectDB = require("./migrations/index.js");
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, { cors: { origin: "*" } });
+const fs = require("fs");
+const cors = require("cors");
+const passport = require("passport");
+const session = require("express-session");
+const flash = require("express-flash");
+const bodyParser = require("body-parser");
+
+app.use(bodyParser.json({ limit: "10mb" }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(flash());
+app.use(
+  session({
+    secret: "secret",
+    resave: true,
+    saveUninitialized: true,
+  })
+);
 
-const fs = require("fs");
+app.use(passport.session());
+
+const whitelist = ["http://localhost:3000", "https://bucodel.vercel.app"];
+const corsOptions = {
+  /**
+   * @param origin
+   * @param callback
+   */
+  origin: function (origin, callback) {
+    // Check if the origin is allowed by CORS
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+};
+app.use(cors(corsOptions));
 
 const UPLOADS_DIR = "./uploads";
 
@@ -21,16 +54,6 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 }
 
 const { routes } = require("./routes/main");
-
-// Add the following middleware to enable CORS
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
 
 // Registers routes
 routes({ app, io });
