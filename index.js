@@ -1,17 +1,17 @@
 const express = require("express");
 const app = express();
+const cors = require("cors");
 const connectDB = require("./migrations/index.js");
 const server = require("http").createServer(app);
 const io = require("socket.io")(server, { cors: { origin: "*" } });
 const fs = require("fs");
-const cors = require("cors");
 const passport = require("passport");
 const session = require("express-session");
 const flash = require("express-flash");
 const bodyParser = require("body-parser");
 
+app.use(cors()); // Use cors middleware
 app.use(bodyParser.json({ limit: "10mb" }));
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(flash());
@@ -24,23 +24,6 @@ app.use(
 );
 
 app.use(passport.session());
-
-const whitelist = ["http://localhost:3000", "https://bucodel.vercel.app"];
-const corsOptions = {
-  /**
-   * @param origin
-   * @param callback
-   */
-  origin: function (origin, callback) {
-    // Check if the origin is allowed by CORS
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
-app.use(cors(corsOptions));
 
 const UPLOADS_DIR = "./uploads";
 

@@ -150,9 +150,12 @@ router.post(
       res
         .status(200)
         .json({ message: "Profile picture uploaded successfully" });
-      fs.unlinkSync(req);
+
+      // Delete the uploaded file
+      fs.unlinkSync(req.file.path);
     } catch (err) {
-      fs.unlinkSync(req);
+      // Delete the uploaded file in case of error
+      fs.unlinkSync(req.file.path);
       console.log(err);
       res.status(500).json({ message: "Server error" });
     }
